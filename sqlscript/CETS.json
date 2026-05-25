@@ -1,0 +1,17 @@
+{
+	"name": "CETS",
+	"properties": {
+		"content": {
+			"query": "CREATE EXTERNAL TABLE dbo.salesIndiaPARQUET\nWITH(\n        LOCATION = 'Processed/INDIAparquet/',\n        DATA_SOURCE = [synapse-container_sarmastorage_dfs_core_windows_net],\n\t    FILE_FORMAT = SynapseParquetFormat\n) AS \nSELECT * FROM dbo.sales where country = 'India';\n\nSELECT * FROM dbo.salesIndiaparquet;\n\nCREATE EXTERNAL FILE FORMAT SynapseParquetFormat\nWITH (\n    FORMAT_TYPE = PARQUET\n);",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "db",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

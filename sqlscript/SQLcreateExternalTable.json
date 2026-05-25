@@ -1,0 +1,17 @@
+{
+	"name": "SQLcreateExternalTable",
+	"properties": {
+		"content": {
+			"query": "IF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name = 'SynapseDelimitedTextFormat') \n\tCREATE EXTERNAL FILE FORMAT [SynapseDelimitedTextFormat] \n\tWITH ( FORMAT_TYPE = DELIMITEDTEXT ,\n\t       FORMAT_OPTIONS (\n\t\t\t FIELD_TERMINATOR = ',',\n\t\t\t FIRST_ROW = 11,\n\t\t\t USE_TYPE_DEFAULT = FALSE\n\t\t\t))\nGO\n\nIF NOT EXISTS (SELECT * FROM sys.external_data_sources WHERE name = 'synapse-container_sarmastorage_dfs_core_windows_net') \n\tCREATE EXTERNAL DATA SOURCE [synapse-container_sarmastorage_dfs_core_windows_net] \n\tWITH (\n\t\tLOCATION = 'abfss://synapse-container@sarmastorage.dfs.core.windows.net' \n\t)\nGO\n\nCREATE EXTERNAL TABLE dbo.sales (\n\t[sale_id] nvarchar(4000),\n\t[sale_date] date,\n\t[year] bigint,\n\t[quarter] nvarchar(4000),\n\t[month] nvarchar(4000),\n\t[country] nvarchar(4000),\n\t[region] nvarchar(4000),\n\t[city] nvarchar(4000),\n\t[product_name] nvarchar(4000),\n\t[category] nvarchar(4000),\n\t[storage] nvarchar(4000),\n\t[color] nvarchar(4000),\n\t[unit_price_usd] float,\n\t[discount_pct] bigint,\n\t[units_sold] bigint,\n\t[discounted_price_usd] float,\n\t[revenue_usd] float,\n\t[currency] nvarchar(4000),\n\t[fx_rate_to_usd] float,\n\t[revenue_local_currency] float,\n\t[sales_channel] nvarchar(4000),\n\t[payment_method] nvarchar(4000),\n\t[customer_segment] nvarchar(4000),\n\t[customer_age_group] nvarchar(4000),\n\t[previous_device_os] nvarchar(4000),\n\t[customer_rating] float,\n\t[return_status] nvarchar(4000)\n\t)\n\tWITH (\n\tLOCATION = 'apple_global_sales_dataset.csv',\n\tDATA_SOURCE = [synapse-container_sarmastorage_dfs_core_windows_net],\n\tFILE_FORMAT = [SynapseDelimitedTextFormat]\n\t)\nGO\n\n\nSELECT TOP 100 * FROM dbo.sales\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "db",
+				"poolName": "Built-in"
+			},
+			"resultLimit": -1
+		},
+		"type": "SqlQuery"
+	}
+}
