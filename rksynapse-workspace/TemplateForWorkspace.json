@@ -22,6 +22,15 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('workspaceName'), '/quantComputer')]",
+			"type": "Microsoft.Synapse/workspaces/bigDataPools",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/rksynapse-workspace-WorkspaceDefaultSqlServer')]",
 			"type": "Microsoft.Synapse/workspaces/linkedServices",
 			"apiVersion": "2019-06-01-preview",
@@ -114,6 +123,26 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/JOINS')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "\nCREATE VIEW player_clubs AS\n\nSELECT \n    player.player_id,\n    player.name AS player_name,\n    player.country_of_birth,\n    player.country_of_citizenship,\n\n    club.club_id,\n    club.name AS club_name,\n    club.domestic_competition_id,\n    club.total_market_value,\n    club.squad_size\n\nFROM OPENROWSET(\n    BULK 'https://sarmastorage.dfs.core.windows.net/synapse-container/players.csv',\n    FORMAT = 'CSV',\n    HEADER_ROW = TRUE,\n    PARSER_VERSION = '2.0'\n)\nWITH (\n    player_id INT,\n    name VARCHAR(200) COLLATE Latin1_General_100_CI_AS_SC_UTF8,\n    country_of_birth VARCHAR(100) COLLATE Latin1_General_100_CI_AS_SC_UTF8,\n    country_of_citizenship VARCHAR(100) COLLATE Latin1_General_100_CI_AS_SC_UTF8,\n    current_club_id INT\n) AS player\n\nINNER JOIN OPENROWSET(\n    BULK 'https://sarmastorage.dfs.core.windows.net/synapse-container/clubs.csv',\n    FORMAT = 'CSV',\n    HEADER_ROW = TRUE,\n    PARSER_VERSION = '2.0'\n)\nWITH (\n    club_id INT,\n    name VARCHAR(200) COLLATE Latin1_General_100_CI_AS_SC_UTF8,\n    domestic_competition_id VARCHAR(100) COLLATE Latin1_General_100_CI_AS_SC_UTF8,\n    total_market_value FLOAT,\n    squad_size INT\n) AS club\n\nON player.current_club_id = club.club_id;\n\nSELECT * \nFROM player_clubs;\n\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "db",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/Readcsvfile')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
@@ -154,24 +183,180 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/JOINS')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"name": "[concat(parameters('workspaceName'), '/quantComputer')]",
+			"type": "Microsoft.Synapse/workspaces/bigDataPools",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
-				"content": {
-					"query": "\nCREATE VIEW player_clubs AS\n\nSELECT \n    player.player_id,\n    player.name AS player_name,\n    player.country_of_birth,\n    player.country_of_citizenship,\n\n    club.club_id,\n    club.name AS club_name,\n    club.domestic_competition_id,\n    club.total_market_value,\n    club.squad_size\n\nFROM OPENROWSET(\n    BULK 'https://sarmastorage.dfs.core.windows.net/synapse-container/players.csv',\n    FORMAT = 'CSV',\n    HEADER_ROW = TRUE,\n    PARSER_VERSION = '2.0'\n)\nWITH (\n    player_id INT,\n    name VARCHAR(200) COLLATE Latin1_General_100_CI_AS_SC_UTF8,\n    country_of_birth VARCHAR(100) COLLATE Latin1_General_100_CI_AS_SC_UTF8,\n    country_of_citizenship VARCHAR(100) COLLATE Latin1_General_100_CI_AS_SC_UTF8,\n    current_club_id INT\n) AS player\n\nINNER JOIN OPENROWSET(\n    BULK 'https://sarmastorage.dfs.core.windows.net/synapse-container/clubs.csv',\n    FORMAT = 'CSV',\n    HEADER_ROW = TRUE,\n    PARSER_VERSION = '2.0'\n)\nWITH (\n    club_id INT,\n    name VARCHAR(200) COLLATE Latin1_General_100_CI_AS_SC_UTF8,\n    domestic_competition_id VARCHAR(100) COLLATE Latin1_General_100_CI_AS_SC_UTF8,\n    total_market_value FLOAT,\n    squad_size INT\n) AS club\n\nON player.current_club_id = club.club_id;\n\nSELECT * \nFROM player_clubs;\n\n",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "db",
-						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
+				"autoPause": {
+					"enabled": true,
+					"delayInMinutes": 5
 				},
-				"type": "SqlQuery"
+				"autoScale": {
+					"enabled": true,
+					"maxNodeCount": 8,
+					"minNodeCount": 3
+				},
+				"nodeCount": 10,
+				"nodeSize": "Medium",
+				"nodeSizeFamily": "MemoryOptimized",
+				"sparkVersion": "3.5",
+				"isComputeIsolationEnabled": false,
+				"sessionLevelPackagesEnabled": false,
+				"annotations": []
+			},
+			"dependsOn": [],
+			"location": "centralus"
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/sparkSQLPOOLexploration')]",
+			"type": "Microsoft.Synapse/workspaces/notebooks",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"nbformat": 4,
+				"nbformat_minor": 2,
+				"bigDataPool": {
+					"referenceName": "quantComputer",
+					"type": "BigDataPoolReference"
+				},
+				"sessionProperties": {
+					"driverMemory": "28g",
+					"driverCores": 4,
+					"executorMemory": "28g",
+					"executorCores": 4,
+					"numExecutors": 2,
+					"conf": {
+						"spark.dynamicAllocation.enabled": "false",
+						"spark.dynamicAllocation.minExecutors": "2",
+						"spark.dynamicAllocation.maxExecutors": "2",
+						"spark.autotune.trackingId": "ae207161-f0ec-466d-a157-ba014d989c31"
+					}
+				},
+				"metadata": {
+					"saveOutput": true,
+					"enableDebugMode": false,
+					"kernelspec": {
+						"name": "synapse_pyspark",
+						"display_name": "Synapse PySpark"
+					},
+					"language_info": {
+						"name": "python"
+					},
+					"a365ComputeOptions": {
+						"id": "/subscriptions/6bb57f0c-6ee2-4488-aba5-06d777ca4fa1/resourceGroups/rk_rainbow/providers/Microsoft.Synapse/workspaces/rksynapse-workspace/bigDataPools/quantComputer",
+						"name": "quantComputer",
+						"type": "Spark",
+						"endpoint": "https://rksynapse-workspace.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/quantComputer",
+						"auth": {
+							"type": "AAD",
+							"authResource": "https://dev.azuresynapse.net"
+						},
+						"sparkVersion": "3.5",
+						"nodeCount": 10,
+						"cores": 4,
+						"memory": 28,
+						"automaticScaleJobs": false
+					},
+					"sessionKeepAliveTimeout": 30
+				},
+				"cells": [
+					{
+						"cell_type": "code",
+						"metadata": {},
+						"source": [
+							"print(\"hello harikiran\")"
+						],
+						"outputs": [],
+						"execution_count": 4
+					},
+					{
+						"cell_type": "code",
+						"metadata": {},
+						"source": [
+							"from pyspark.sql import functions as F"
+						],
+						"outputs": [],
+						"execution_count": 12
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {},
+							"collapsed": false
+						},
+						"source": [
+							"adls_path ='abfss://synapse-container@sarmastorage.dfs.core.windows.net/apple_global_sales_dataset.csv' \n",
+							"sales_df = (\n",
+							"    spark.read.format(\"csv\")\n",
+							"    .option(\"header\", True)\n",
+							"    .option(\"inferSchema\", True)\n",
+							"    .load(adls_path)\n",
+							")\n",
+							"display(sales_df)"
+						],
+						"outputs": [],
+						"execution_count": 13
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"collapsed": false
+						},
+						"source": [
+							"sales_q3 = sales_df.filter(F.col(\"quarter\")== \"Q3\")\n",
+							"display(sales_q3)"
+						],
+						"outputs": [],
+						"execution_count": 14
+					},
+					{
+						"cell_type": "code",
+						"metadata": {},
+						"source": [
+							"sales_q3.write.format(\"parquet\").save(\"notebook/salesQ3\")"
+						],
+						"outputs": [],
+						"execution_count": 16
+					}
+				]
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Pipeline 1')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "Notebook1",
+						"type": "SynapseNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebook": {
+								"referenceName": "sparkSQLPOOLexploration",
+								"type": "NotebookReference"
+							},
+							"snapshot": true,
+							"conf": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/notebooks/sparkSQLPOOLexploration')]"
+			]
 		}
 	]
 }
