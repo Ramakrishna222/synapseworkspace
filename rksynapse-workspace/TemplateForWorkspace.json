@@ -119,12 +119,12 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"content": {
-					"query": "SELECT \n* \nFROM OPENROWSET(\n    BULK'https://sarmastorage.dfs.core.windows.net/synapse-container/apple_global_sales_dataset.csv',\n    FORMAT = 'CSV',\n    HEADER_ROW = TRUE,\n    PARSER_VERSION ='2.0'\n) AS [RESULT] \nWHERE QUARTER = 'Q1' AND YEAR = 2023;",
+					"query": "SELECT \n* \nFROM OPENROWSET(\n    BULK'https://sarmastorage.dfs.core.windows.net/synapse-container/apple_global_sales_dataset.csv',\n    FORMAT = 'CSV',\n    HEADER_ROW = TRUE,\n    PARSER_VERSION ='2.0'\n) AS [RESULT] \nWHERE QUARTER = 'Q1' AND YEAR = 2023;\n\nSELECT country,ROUND(sum(revenue_usd), 2) as Total_Revenue\nFROM OPENROWSET(\n    BULK'https://sarmastorage.dfs.core.windows.net/synapse-container/apple_global_sales_dataset.csv',\n    FORMAT = 'CSV',\n    HEADER_ROW = TRUE,\n    PARSER_VERSION ='2.0'\n) AS [RESULT] \nGROUP BY country; \n\n--- creating view \nCREATE VIEW Apple_revenue  as \nSELECT country,ROUND(sum(revenue_usd), 2) as Total_Revenue\nFROM OPENROWSET(\n    BULK'https://sarmastorage.dfs.core.windows.net/synapse-container/apple_global_sales_dataset.csv',\n    FORMAT = 'CSV',\n    HEADER_ROW = TRUE,\n    PARSER_VERSION ='2.0'\n) AS [RESULT] \nGROUP BY country;\n\nSELECT * from Apple_revenue;",
 					"metadata": {
 						"language": "sql"
 					},
 					"currentConnection": {
-						"databaseName": "dbo",
+						"databaseName": "db",
 						"poolName": "Built-in"
 					},
 					"resultLimit": 5000
