@@ -119,7 +119,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"content": {
-					"query": "SELECT \n* \nFROM OPENROWSET(\n    BULK'https://sarmastorage.dfs.core.windows.net/synapse-container/apple_global_sales_dataset.csv',\n    FORMAT = 'CSV',\n    HEADER_ROW = TRUE,\n    PARSER_VERSION ='2.0'\n) AS [RESULT] \nWHERE QUARTER = 'Q1' AND YEAR = 2023;\n\nSELECT country,ROUND(sum(revenue_usd), 2) as Total_Revenue\nFROM OPENROWSET(\n    BULK'https://sarmastorage.dfs.core.windows.net/synapse-container/apple_global_sales_dataset.csv',\n    FORMAT = 'CSV',\n    HEADER_ROW = TRUE,\n    PARSER_VERSION ='2.0'\n) AS [RESULT] \nGROUP BY country; \n\n--- creating view \nCREATE VIEW Apple_revenue  as \nSELECT country,ROUND(sum(revenue_usd), 2) as Total_Revenue\nFROM OPENROWSET(\n    BULK'https://sarmastorage.dfs.core.windows.net/synapse-container/apple_global_sales_dataset.csv',\n    FORMAT = 'CSV',\n    HEADER_ROW = TRUE,\n    PARSER_VERSION ='2.0'\n) AS [RESULT] \nGROUP BY country;\n\nSELECT * from Apple_revenue;",
+					"query": "SELECT \n* \nFROM OPENROWSET(\n    BULK'https://sarmastorage.dfs.core.windows.net/synapse-container/apple_global_sales_dataset.csv',\n    FORMAT = 'CSV',\n    HEADER_ROW = TRUE,\n    PARSER_VERSION ='2.0'\n) AS [RESULT] \nWHERE QUARTER = 'Q1' AND YEAR = 2023;\n\nSELECT country,ROUND(sum(revenue_usd), 2) as Total_Revenue\nFROM OPENROWSET(\n    BULK'https://sarmastorage.dfs.core.windows.net/synapse-container/apple_global_sales_dataset.csv',\n    FORMAT = 'CSV',\n    HEADER_ROW = TRUE,\n    PARSER_VERSION ='2.0'\n) AS [RESULT] \nGROUP BY country; \n\n--- creating view \nCREATE VIEW Apple_revenue  as \nSELECT country,ROUND(sum(revenue_usd), 2) as Total_Revenue\nFROM OPENROWSET(\n    BULK'https://sarmastorage.dfs.core.windows.net/synapse-container/apple_global_sales_dataset.csv',\n    FORMAT = 'CSV',\n    HEADER_ROW = TRUE,\n    PARSER_VERSION ='2.0'\n) AS [RESULT] \nGROUP BY country;\n\nSELECT * from Apple_revenue;\n\n---- creating TopN\n\nCREATE VIEW AppleRevenueTopN AS\n\nSELECT\n    country,\n    total_revenue,\n    ROW_NUMBER() OVER(\n        ORDER BY total_revenue DESC\n    ) AS row_num\nFROM (\nSELECT\n        country,\n        ROUND(SUM(revenue_usd), 2) AS total_revenue\n    FROM OPENROWSET(\n        BULK 'https://sarmastorage.dfs.core.windows.net/synapse-container/apple_global_sales_dataset.csv',\n        FORMAT = 'CSV',\n        HEADER_ROW = TRUE,\n        PARSER_VERSION = '2.0'\n    ) AS result\n\n    GROUP BY country\n\n) AS revenue_data;\n\nSELECT * from AppleRevenueTopN;\n",
 					"metadata": {
 						"language": "sql"
 					},
@@ -148,6 +148,26 @@
 						"poolName": "Built-in"
 					},
 					"resultLimit": -1
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/JOINS')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "\nCREATE VIEW player_clubs AS\n\nSELECT \n    player.player_id,\n    player.name AS player_name,\n    player.country_of_birth,\n    player.country_of_citizenship,\n\n    club.club_id,\n    club.name AS club_name,\n    club.domestic_competition_id,\n    club.total_market_value,\n    club.squad_size\n\nFROM OPENROWSET(\n    BULK 'https://sarmastorage.dfs.core.windows.net/synapse-container/players.csv',\n    FORMAT = 'CSV',\n    HEADER_ROW = TRUE,\n    PARSER_VERSION = '2.0'\n)\nWITH (\n    player_id INT,\n    name VARCHAR(200) COLLATE Latin1_General_100_CI_AS_SC_UTF8,\n    country_of_birth VARCHAR(100) COLLATE Latin1_General_100_CI_AS_SC_UTF8,\n    country_of_citizenship VARCHAR(100) COLLATE Latin1_General_100_CI_AS_SC_UTF8,\n    current_club_id INT\n) AS player\n\nINNER JOIN OPENROWSET(\n    BULK 'https://sarmastorage.dfs.core.windows.net/synapse-container/clubs.csv',\n    FORMAT = 'CSV',\n    HEADER_ROW = TRUE,\n    PARSER_VERSION = '2.0'\n)\nWITH (\n    club_id INT,\n    name VARCHAR(200) COLLATE Latin1_General_100_CI_AS_SC_UTF8,\n    domestic_competition_id VARCHAR(100) COLLATE Latin1_General_100_CI_AS_SC_UTF8,\n    total_market_value FLOAT,\n    squad_size INT\n) AS club\n\nON player.current_club_id = club.club_id;\n\nSELECT * \nFROM player_clubs;\n\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "db",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
 				},
 				"type": "SqlQuery"
 			},
