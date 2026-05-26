@@ -1,0 +1,95 @@
+{
+	"name": "sparkSQLPOOLexploration",
+	"properties": {
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "quantComputer",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "8f007766-774e-4932-9c62-fe28eb9a3d22"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/6bb57f0c-6ee2-4488-aba5-06d777ca4fa1/resourceGroups/rk_rainbow/providers/Microsoft.Synapse/workspaces/rksynapse-workspace/bigDataPools/quantComputer",
+				"name": "quantComputer",
+				"type": "Spark",
+				"endpoint": "https://rksynapse-workspace.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/quantComputer",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net"
+				},
+				"sparkVersion": "3.5",
+				"nodeCount": 10,
+				"cores": 4,
+				"memory": 28,
+				"automaticScaleJobs": false
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"source": [
+					"print(\"hello harikiran\")"
+				],
+				"execution_count": 4
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"from pyspark.sql import functions as F"
+				],
+				"execution_count": 8
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"collapsed": false
+				},
+				"source": [
+					"adls_path ='abfss://synapse-container@sarmastorage.dfs.core.windows.net/apple_global_sales_dataset.csv' \n",
+					"sales_df = (\n",
+					"    spark.read.format(\"csv\")\n",
+					"    .option(\"header\", True)\n",
+					"    .option(\"inferSchema\", True)\n",
+					"    .load(adls_path)\n",
+					")\n",
+					"display(sales_df)"
+				],
+				"execution_count": 6
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"collapsed": false
+				},
+				"source": [
+					"sales_q3 = sales_df.filter(F.col(\"quarter\")== \"Q3\")\n",
+					"display(sales_q3)"
+				],
+				"execution_count": 9
+			}
+		]
+	}
+}
